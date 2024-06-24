@@ -2,7 +2,7 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
-from base64 import b64encode, b64decode
+import base64
 
 #Bibliotecas de interface
 from PySimpleGUI import PySimpleGUI as sg
@@ -16,9 +16,10 @@ def obterMensagem():
     return input("Digite a mensagem: ")
 
 def criptografiaAES(chave, texto):
-    cifra = AES.new(chave, AES.MODE_ECB)
-    cifra = cifra.encrypt(pad(texto, AES.block_size))
-    return b64encode(texto).decode('latin1')
+    cifra = AES.new(chave, AES.MODE_CBC)
+    iv = cifra.iv
+    msg_cripto = cifra.encrypt(pad(texto.encode('utf-8'), AES.block_size))
+    return base64.b64encode(iv + msg_cripto).decode('utf-8')
 
 def converterBinario(texto):
     #Converte cada caractere de texto para seu valor ASCII e formata para uma representação binária de 8 bits.
@@ -36,9 +37,12 @@ def desconverterBinario(binario):
     return texto
 
 def descriptografiaAES(chave, texto):
-    cifra = AES.new(chave, AES.MODE_ECB)
-    textoDescriptografado = cifra.decrypt(pad(b64decode(texto), AES.block_size))
-    return textoDescriptografado.decode('latin1').rstrip('\0')
+    texto = base64.b64decode(texto)
+    iv = texto[:AES.block_size]
+    texto = texto[AES.block_size:]
+    cifra = AES.new(chave, AES.MODE_CBC, iv)
+    textoDescriptografado = unpad(cifra.decrypt(texto), AES.block_size)
+    return textoDescriptografado.decode('utf-8')
 
 def aplicarCodigoDeLinha(mensagemGraf):
     # Define your data (e.g., binary stream)
@@ -142,9 +146,9 @@ while True:
     elif eventos == 'Enviar':
         #Servidor-------------------------------------
         mensagem = valores['mensagemBox']
-        msg_bytes = mensagem.encode('utf-8')  # Converte para bytes usando UTF-8 (encrypt não aceita string)
+        #msg_bytes = mensagem.encode('utf-8')  # Converte para bytes usando UTF-8 (encrypt não aceita string)
         chave = get_random_bytes(16) #16 bytes para serem a chave do AES-128
-        mensagemCripto = criptografiaAES(chave, msg_bytes)
+        mensagemCripto = criptografiaAES(chave, mensagem)
         janela['mensagemCriptoK'].update(mensagemCripto)
         mensagemBin = converterBinario(mensagemCripto)
         janela['mensagemBinK'].update(mensagemBin)
