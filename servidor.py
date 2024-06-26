@@ -79,7 +79,7 @@ def fazerGrafico(sinal, T):
 
 #Configuracao do Bluetooth do servidor
 servidor =  socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-servidor.bind(("0c:d2:92:95:53:a7", 4))#MAC do servidor e canal
+servidor.bind(("04:6c:59:0e:23:32", 4))#MAC do servidor e canal
 servidor.listen(1)#Quantidade de dispositivos que podem se comunicar no canal
 
 cliente, addr = servidor.accept()#Aceitar conexao com o cliente
@@ -121,10 +121,15 @@ try:
                 janela['mensagemLinhaEnvK'].update(mensagemLinha[0:tam])
                 m = ''.join(map(str, mensagemLinha[0:tam]))
                 print(mensagemLinha[0:tam])
+                #print("aqui")
                 print(m)
                 t = str(time)
+                print("encode")
                 cliente.send(m.encode('utf-8'))
+                print(m.encode('utf-8'))
                 cliente.send(t.encode('utf-8'))
+                print(t.encode('utf-8'))
+                print("final encode")
                 print(chave)
                 cliente.send(chave)
 except OSError as e:

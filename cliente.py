@@ -1,6 +1,6 @@
 #Biblioteca para o Bluetooth
 import socket
-  
+
 #Bibliotecas de criptografia
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -58,6 +58,7 @@ def reverterCodigoDeLinha(pam5_waveform):
 
 def fazerGrafico(sinal, T):
     # Create time axis
+    print("grafico")
     time = np.arange(len(sinal))
 
     # Upsample PAM5 levels to create a square waveform
@@ -84,7 +85,7 @@ def fazerList(v):
 
 #Configuracao do Bluetooth do cliente
 cliente =  socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-cliente.connect(("0c:d2:92:95:53:a7", 4))#MAC do servidor e canal
+cliente.connect(("04:6c:59:0e:23:32", 4))#MAC do servidor e canal
 
 #Layout
 sg.theme('Reddit')
@@ -100,8 +101,11 @@ layout =  [
 janela = sg.Window('Codificação de linha(Cliente) - 4D-Pam5', layout)
 
 try:
+    print("try")
     while True:
-        eventos, valores = janela.read()
+        print("while true")
+        eventos, valores = janela.read(timeout=100)
+        print("chegou")
         if eventos == sg.WINDOW_CLOSED:
             break;
         else:
@@ -111,26 +115,30 @@ try:
             print(m2)
             mensagemLinha = list(map(int, m2))
             print(mensagemLinha)
-            if not mensagemLinha:
-                break
-            time = float((cliente.recv(1024)).decode('utf-8'))
-            print(time)
-            if not time:
-                break
-            chave = cliente.recv(1024)
-            print(chave)
-            if not chave:
-                break
-            fazerGrafico(mensagemLinha, time)
+        if not mensagemLinha:
+            print("quebrou")
+            break
+        print((cliente.recv(1024)))
+        time = float((cliente.recv(1024)).decode('utf-8'))
+        print(time)
+        if not time:
+            break
+        chave = cliente.recv(1024)
+        print(chave)
+        if not chave:
+            break
+        
+        fazerGrafico(mensagemLinha, time)
             #Codigo de linha/Cliente---------------------
-            janela['mensagemLinhaRecK'].update(mensagemLinha)
-            mensagemLinhaDec = reverterCodigoDeLinha(mensagemLinha)
+        janela['mensagemLinhaRecK'].update(mensagemLinha)
+        mensagemLinhaDec = reverterCodigoDeLinha(mensagemLinha)
             #janela['mensagemLinhaDecK'].update(mensagemLinhaDec[0:2*tam])
             #Cliente--------------------------------------
-            msg_desconv = desconverterBinario(mensagemLinhaDec)
-            janela['mensagemDesconvK'].update(msg_desconv)
-            msg_descripto = descriptografiaAES(chave, msg_desconv)
-            janela['mensagemDescriptoK'].update(msg_descripto)
+        msg_desconv = desconverterBinario(mensagemLinhaDec)
+        janela['mensagemDesconvK'].update(msg_desconv)
+        msg_descripto = descriptografiaAES(chave, msg_desconv)
+        janela['mensagemDescriptoK'].update(msg_descripto)
+        
 except OSError as e:
     pass
 
