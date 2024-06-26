@@ -24,12 +24,19 @@ def desconverterBinario(binario):
 
     return texto
 
-def descriptografiaAES(chave, texto):
-    texto = base64.b64decode(texto)
-    iv = texto[:AES.block_size]
-    texto = texto[AES.block_size:]
+def pad_base64(s):
+    return s + '=' * (-len(s) % 4)
+
+def descriptografiaAES(chave, texto, iv):
+    #texto = pad_base64(texto)
+    #texto_deco = base64.b64decode(texto)
+    #print(texto_deco)
+    print("iv")
+    print(iv)
+    #texto_deco = texto_deco[AES.block_size:]
     cifra = AES.new(chave, AES.MODE_CBC, iv)
     textoDescriptografado = unpad(cifra.decrypt(texto), AES.block_size)
+    print(textoDescriptografado)
     return textoDescriptografado.decode('utf-8')
 
 def reverterCodigoDeLinha(pam5_waveform):
@@ -59,12 +66,13 @@ def reverterCodigoDeLinha(pam5_waveform):
 def fazerGrafico(sinal, T):
     # Create time axis
     print("grafico")
-    time = np.arange(len(sinal))
+    time = np.arange(0, len(sinal) * T, T)
 
     # Upsample PAM5 levels to create a square waveform
     square_waveform = np.repeat(sinal, int(1 / T))
 
     # Plot the waveform
+    plt.ion()
     plt.clf()
     plt.plot(time, square_waveform, drawstyle="steps-pre", marker="o", linestyle="-", color="b", label="PAM5 Signal")
     plt.axhline(y=0, color='red', linestyle='--', label='Zero Voltage')
@@ -74,6 +82,7 @@ def fazerGrafico(sinal, T):
     plt.grid(True)
     plt.legend()
     plt.show()
+    plt.pause(0.001)
 
 def fazerList(v):
     v = v.replace('1','1 ')
@@ -107,37 +116,75 @@ try:
         eventos, valores = janela.read(timeout=100)
         print("chegou")
         if eventos == sg.WINDOW_CLOSED:
-            break;
+            break
         else:
-            m = fazerList((cliente.recv(1024)).decode('utf-8'))
+            print("else msg")
+            decoded_text = cliente.recv(1040).decode('utf-8', errors='replace')
+            m = fazerList(decoded_text)
             print(m)
             m2 = list(map(float, m))
             print(m2)
             mensagemLinha = list(map(int, m2))
+            print("mensagemLinha")
             print(mensagemLinha)
         if not mensagemLinha:
+            
+            break
+        print(decoded_text)
+        time = (decoded_text)
+        print(time)
+        time_list=fazerList(time)
+        print(time_list)
+        time_float = np.array(time_list, dtype=float)
+        print("time_float: ")
+        print(time_float)
+        if not time:
             print("quebrou")
             break
-        print((cliente.recv(1024)))
-        time = float((cliente.recv(1024)).decode('utf-8'))
-        print(time)
-        if not time:
-            break
-        chave = cliente.recv(1024)
+        chave = cliente.recv(1040)
         print(chave)
         if not chave:
             break
         
-        fazerGrafico(mensagemLinha, time)
+        iv = cliente.recv(1040)
+        print("iv")
+        print(iv)
+        '''
+        iv2 = cliente.recv(1040)
+        print("iv2")
+        print(iv2)
+        iv3 = cliente.recv(1040)
+        print("iv3")
+        print(iv3)
+        iv4 = cliente.recv(1040)
+        print("iv4")
+        print(iv4)
+        '''
+
+        for tam in range(4, len(mensagemLinha) + 4, 4):
+            fazerGrafico(mensagemLinha[0:tam], 1.0)
+            print("final grafico")
             #Codigo de linha/Cliente---------------------
-        janela['mensagemLinhaRecK'].update(mensagemLinha)
-        mensagemLinhaDec = reverterCodigoDeLinha(mensagemLinha)
+            janela['mensagemLinhaRecK'].update(mensagemLinha)
+            mensagemLinhaDec = reverterCodigoDeLinha(mensagemLinha)
+            print("reverter cod")
             #janela['mensagemLinhaDecK'].update(mensagemLinhaDec[0:2*tam])
             #Cliente--------------------------------------
-        msg_desconv = desconverterBinario(mensagemLinhaDec)
-        janela['mensagemDesconvK'].update(msg_desconv)
-        msg_descripto = descriptografiaAES(chave, msg_desconv)
-        janela['mensagemDescriptoK'].update(msg_descripto)
+            msg_desconv = desconverterBinario(mensagemLinhaDec)
+            print("desconv bin")
+            janela['mensagemDesconvK'].update(msg_desconv)
+            print(msg_desconv)
+            msg_desconv_pad = pad_base64(msg_desconv)
+            print("chave")
+            print(chave)
+            if chave.startswith(b'1.0'):
+                chave = chave[len(b'1.0'):]
+            #chave_deco=chave.decode('utf-8')
+            print("chave_if")
+            print(chave)
+            msg_descripto = descriptografiaAES(chave, msg_desconv, iv)
+            print("descripto")
+            janela['mensagemDescriptoK'].update(msg_descripto)
         
 except OSError as e:
     pass
