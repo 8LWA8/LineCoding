@@ -2,10 +2,13 @@
 import socket
 
 #Bibliotecas de criptografia
+'''
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 import base64
+import unicodedata
+'''
 import string
 
 #Bibliotecas de interface
@@ -16,12 +19,15 @@ import numpy as np
 import matplotlib.pylab as plt
 
 #Funcoes
+'''
 def criptografiaAES(chave, texto):
     cifra = AES.new(chave, AES.MODE_CBC)
     iv = cifra.iv
+    print("iv funcao")
+    print(iv)
     msg_cripto = cifra.encrypt(pad(texto.encode('utf-8'), AES.block_size))
-    return base64.b64encode(iv + msg_cripto).decode('utf-8')
-
+    return (base64.b64encode(iv + msg_cripto).decode('utf-8'), iv)
+'''
 def criptografar(mensagem, chave):
     alfabeto = string.ascii_letters + string.digits + string.punctuation + ' áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ'
     alfabeto_cifrado = alfabeto[chave:] + alfabeto[:chave]
@@ -108,13 +114,13 @@ janela = sg.Window('Codificação de linha(Servidor) - 4D-Pam5', layout)
 
 try:
     while True:
+        plt.figure(figsize=(10,6))
         eventos, valores = janela.read()
         if eventos == sg.WINDOW_CLOSED:
             break;
         elif eventos == 'Enviar':
             #Servidor-------------------------------------
             mensagem = valores['mensagemBox']
-            chave = get_random_bytes(16) #16 bytes para serem a chave do AES-128
             mensagemCripto = criptografar(mensagem, 4)
             janela['mensagemCriptoK'].update(mensagemCripto)
             mensagemBin = converterBinario(mensagemCripto)
@@ -128,17 +134,9 @@ try:
                 janela['mensagemLinhaEnvK'].update(mensagemLinha[0:tam])
                 m = ''.join(map(str, mensagemLinha[0:tam]))
                 print(mensagemLinha[0:tam])
-                #print("aqui")
                 print(m)
-                t = str(time)
-                print("encode")
                 cliente.send(m.encode('utf-8'))
                 print(m.encode('utf-8'))
-                cliente.send(t.encode('utf-8'))
-                print(t.encode('utf-8'))
-                print("final encode")
-                print(chave)
-                cliente.send(chave)
 except OSError as e:
     pass
 
