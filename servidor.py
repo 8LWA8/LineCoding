@@ -6,6 +6,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 import base64
+import string
 
 #Bibliotecas de interface
 from PySimpleGUI import PySimpleGUI as sg
@@ -20,6 +21,12 @@ def criptografiaAES(chave, texto):
     iv = cifra.iv
     msg_cripto = cifra.encrypt(pad(texto.encode('utf-8'), AES.block_size))
     return base64.b64encode(iv + msg_cripto).decode('utf-8')
+
+def criptografar(mensagem, chave):
+    alfabeto = string.ascii_letters + string.digits + string.punctuation + ' áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ'
+    alfabeto_cifrado = alfabeto[chave:] + alfabeto[:chave]
+    tabela = str.maketrans(alfabeto, alfabeto_cifrado)
+    return mensagem.translate(tabela)
 
 def converterBinario(texto):
     #Converte cada caractere de texto para seu valor ASCII e formata para uma representação binária de 8 bits.
@@ -108,7 +115,7 @@ try:
             #Servidor-------------------------------------
             mensagem = valores['mensagemBox']
             chave = get_random_bytes(16) #16 bytes para serem a chave do AES-128
-            mensagemCripto = criptografiaAES(chave, mensagem)
+            mensagemCripto = criptografar(mensagem, 4)
             janela['mensagemCriptoK'].update(mensagemCripto)
             mensagemBin = converterBinario(mensagemCripto)
             janela['mensagemBinK'].update(mensagemBin)
