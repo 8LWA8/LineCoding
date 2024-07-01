@@ -2,10 +2,13 @@
 import socket
 
 #Bibliotecas de criptografia
+'''
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
+'''
 import base64
+import string
 
 #Bibliotecas de interface
 from PySimpleGUI import PySimpleGUI as sg
@@ -26,7 +29,7 @@ def desconverterBinario(binario):
 
 def pad_base64(s):
     return s + '=' * (-len(s) % 4)
-
+'''
 def descriptografiaAES(chave, texto, iv):
     #texto = pad_base64(texto)
     #texto_deco = base64.b64decode(texto)
@@ -38,6 +41,13 @@ def descriptografiaAES(chave, texto, iv):
     textoDescriptografado = unpad(cifra.decrypt(texto), AES.block_size)
     print(textoDescriptografado)
     return textoDescriptografado.decode('utf-8')
+'''
+
+def descriptografar(mensagem, chave):
+    alfabeto = string.ascii_letters + string.digits + string.punctuation + ' áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ'
+    alfabeto_cifrado = alfabeto[chave:] + alfabeto[:chave]
+    tabela = str.maketrans(alfabeto_cifrado, alfabeto)
+    return mensagem.translate(tabela)
 
 def reverterCodigoDeLinha(pam5_waveform):
     outBits = []
@@ -110,16 +120,12 @@ layout =  [
 janela = sg.Window('Codificação de linha(Cliente) - 4D-Pam5', layout)
 
 try:
-    print("try")
     while True:
-        print("while true")
         eventos, valores = janela.read(timeout=100)
-        print("chegou")
         if eventos == sg.WINDOW_CLOSED:
             break
         else:
-            print("else msg")
-            decoded_text = cliente.recv(1040).decode('utf-8', errors='replace')
+            decoded_text = cliente.recv(1024).decode('utf-8', errors='replace')
             m = fazerList(decoded_text)
             print(m)
             m2 = list(map(float, m))
@@ -130,36 +136,6 @@ try:
         if not mensagemLinha:
             
             break
-        print(decoded_text)
-        time = (decoded_text)
-        print(time)
-        time_list=fazerList(time)
-        print(time_list)
-        time_float = np.array(time_list, dtype=float)
-        print("time_float: ")
-        print(time_float)
-        if not time:
-            print("quebrou")
-            break
-        chave = cliente.recv(1040)
-        print(chave)
-        if not chave:
-            break
-        
-        iv = cliente.recv(1040)
-        print("iv")
-        print(iv)
-        '''
-        iv2 = cliente.recv(1040)
-        print("iv2")
-        print(iv2)
-        iv3 = cliente.recv(1040)
-        print("iv3")
-        print(iv3)
-        iv4 = cliente.recv(1040)
-        print("iv4")
-        print(iv4)
-        '''
 
         for tam in range(4, len(mensagemLinha) + 4, 4):
             fazerGrafico(mensagemLinha[0:tam], 1.0)
@@ -168,21 +144,14 @@ try:
             janela['mensagemLinhaRecK'].update(mensagemLinha)
             mensagemLinhaDec = reverterCodigoDeLinha(mensagemLinha)
             print("reverter cod")
-            #janela['mensagemLinhaDecK'].update(mensagemLinhaDec[0:2*tam])
+            janela['mensagemLinhaDecK'].update(mensagemLinhaDec[0:2*tam])
             #Cliente--------------------------------------
             msg_desconv = desconverterBinario(mensagemLinhaDec)
             print("desconv bin")
             janela['mensagemDesconvK'].update(msg_desconv)
             print(msg_desconv)
             msg_desconv_pad = pad_base64(msg_desconv)
-            print("chave")
-            print(chave)
-            if chave.startswith(b'1.0'):
-                chave = chave[len(b'1.0'):]
-            #chave_deco=chave.decode('utf-8')
-            print("chave_if")
-            print(chave)
-            msg_descripto = descriptografiaAES(chave, msg_desconv, iv)
+            msg_descripto = descriptografar(msg_desconv, 4)
             print("descripto")
             janela['mensagemDescriptoK'].update(msg_descripto)
         
