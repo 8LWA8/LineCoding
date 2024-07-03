@@ -29,9 +29,13 @@ def criptografiaAES(chave, texto):
     return (base64.b64encode(iv + msg_cripto).decode('utf-8'), iv)
 '''
 def criptografar(mensagem, chave):
+    #Inclui caracteres especiais no alfabeto:
     alfabeto = string.ascii_letters + string.digits + string.punctuation + ' áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ'
+    #Desloca as letras um determinado número de posições
     alfabeto_cifrado = alfabeto[chave:] + alfabeto[:chave]
+    #Faz a criptografia Cifra de César
     tabela = str.maketrans(alfabeto, alfabeto_cifrado)
+    #Retorna mensagem criptografada
     return mensagem.translate(tabela)
 
 def converterBinario(texto):
