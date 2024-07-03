@@ -44,9 +44,13 @@ def descriptografiaAES(chave, texto, iv):
 '''
 
 def descriptografar(mensagem, chave):
+    #Inclui caracteres especiais no alfabeto:
     alfabeto = string.ascii_letters + string.digits + string.punctuation + ' áéíóúãõâêîôûçÁÉÍÓÚÃÕÂÊÎÔÛÇ'
+    #Desloca as letras um determinado número de posições
     alfabeto_cifrado = alfabeto[chave:] + alfabeto[:chave]
+    #Faz a descriptografia Cifra de César
     tabela = str.maketrans(alfabeto_cifrado, alfabeto)
+    #Retorna mensagem descriptografada
     return mensagem.translate(tabela)
 
 def reverterCodigoDeLinha(pam5_waveform):
