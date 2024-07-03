@@ -74,6 +74,8 @@ def reverterCodigoDeLinha(pam5_waveform):
 
 
 def fazerGrafico(sinal, T):
+    v1 = [0]
+    sinal= v1 + sinal + v1
     # Create time axis
     #print("grafico")
     time = np.arange(0, len(sinal) * T, T)
@@ -133,8 +135,7 @@ try:
             mensagemLinha = list(map(int, m2))
             #print("mensagemLinha")
             #print(mensagemLinha)
-        if not mensagemLinha:
-            
+        if not mensagemLinha: 
             break
 
         for tam in range(4, len(mensagemLinha) + 4, 4):
@@ -159,4 +160,3 @@ except OSError as e:
     pass
 
 cliente.close()
-
